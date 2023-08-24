@@ -21,7 +21,13 @@ class Direction:
 
 
 class Maze:
-    def __init__(self, size=(5, 5), wall_index=[2, 9, 11, 12, 14, 15, 22, 24], maze=None) -> None:
+    def __init__(
+        self,
+        size=(5, 5),
+        wall_index=[2, 9, 11, 12, 14, 15, 22, 24],
+        maze=None,
+        reward_mode="standard",
+    ) -> None:
         if maze is not None:
             self.maze = maze
             walls = np.where(np.logical_not(maze))
@@ -34,6 +40,7 @@ class Maze:
             self.walls = [np.array([i // size[0], i % size[0]]) for i in wall_index]
         self.commands = (Direction.UP, Direction.DOWN, Direction.RIGHT, Direction.LEFT)
         self.current_position = np.zeros((2,), int)
+        self.reward_mode = reward_mode
 
     def up(self):
         next_position = deepcopy(self.current_position)
@@ -86,6 +93,30 @@ class Maze:
 
     def reset(self):
         self.current_position = np.zeros((2,), int)
+
+    def step(self, action: int):
+        """step into time t+1 by applying action to this env.
+
+        Args:
+            action (int): Action made by an agent.
+        Returns:
+            reward (float): Reward.
+            goaled (bool): if goaled then True.
+        """
+        act_info = self.move_to(action)
+        reward = self.calc_reward(*act_info)
+        return reward, self.is_goaled()
+
+    def calc_reward(self, moved_successfully, is_goaled):
+        reward = 0.0
+        if self.reward_mode == "standard":
+            if not moved_successfully:
+                reward -= 0.1
+            if is_goaled:
+                reward += 1.0
+        else:
+            pass
+        return reward
 
     def __str__(self):
         current_maze = np.where(self.maze, "□", "■")

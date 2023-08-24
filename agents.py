@@ -26,11 +26,10 @@ class Agent:
             gamma (float, optional): _description_. Defaults to 0.99.
             max_initial_q (float, optional): _description_. Defaults to 0.1.
         """
-        self.env = env
         self.alpha = alpha
         self.gamma = gamma
         self.qtable = np.random.uniform(
-            low=-max_initial_q, high=-max_initial_q, size=(*self.env.maze.shape, 4)
+            low=-max_initial_q, high=-max_initial_q, size=(*env.maze.shape, 4)
         )
 
     def update_qtable(self, state, action, reward, next_state, next_action):
@@ -59,45 +58,46 @@ class Agent:
         return action
 
 
-def train(agent: Agent, num_episodes: int = 200, num_steps: int = 30):
+def train(agent: Agent, env: Maze, num_episodes: int = 200, num_steps: int = 30):
     for episode in range(num_episodes):
-        state = tuple(agent.env.current_position)
+        state = tuple(env.current_position)
         action = agent.act(state, episode)
         episode_reward = 0
 
         for t in range(num_steps):
-            reward = 0
-            moved_successfully, is_goaled = agent.env.move_to(INDEX2DIRECTIONS[action])
-            next_state = tuple(agent.env.current_position)
-            if is_goaled:
-                reward = 10
-            if not moved_successfully:  # 動いた方向が壁なら、ペナルティ
-                reward = -1
+            action = agent.act(state, episode)
+            reward, goaled = env.step(INDEX2DIRECTIONS[action])
+            next_state = tuple(env.current_position)
+
             episode_reward += reward
+
             next_action = agent.act(next_state, episode)
+
             agent.update_qtable(state, action, reward, next_state, next_action)
+
             state, action = next_state, next_action
-            if is_goaled:
+            if goaled:
                 break
-        agent.env.reset()
+        env.reset()
         if episode % 50 == 0:
             print(f"Episode {episode} finished / Episode reward: {episode_reward}")
 
 
 if __name__ == "__main__":
-    agent = Agent(Maze())
-    train(agent, num_episodes=50, num_steps=100)
+    env = Maze()
+    agent = Agent(env)
+    train(agent, env, num_episodes=50, num_steps=100)
 
     # If the qtable does not display well, comment out the part that prints the per-episode reward when learning.
     # print(agent.qtable)
 
     # input()  # Stop executing to watch q-table.
     goaled = False
-    agent.env.reset()
+    env.reset()
     while not goaled:  # Test the result of training.
-        print(agent.env, "\n")
-        state = tuple(agent.env.current_position)
+        print(env, "\n")
+        state = tuple(env.current_position)
         action = agent.act_greedy(state)
-        _, goaled = agent.env.move_to(INDEX2DIRECTIONS[action])
+        _, goaled = env.step(INDEX2DIRECTIONS[action])
         sleep(0.5)
     print("GOAL")
