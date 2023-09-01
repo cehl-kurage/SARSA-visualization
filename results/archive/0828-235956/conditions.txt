@@ -1,0 +1,10 @@
+
+maze: 5
+--------------
+reward_mode: sparse
+reward_scale: 1.0
+epsilon_greedy_off: True
+epsilon: 0.9
+--------------
+num_episodes: 60
+reset: inf

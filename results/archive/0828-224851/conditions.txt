@@ -1,0 +1,8 @@
+
+maze: 5
+--------------
+reward_mode: standard
+reward_scale: 1.0
+--------------
+num_episodes: 30
+reset: inf
