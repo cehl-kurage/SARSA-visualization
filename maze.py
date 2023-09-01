@@ -31,7 +31,7 @@ class Maze:
         if maze is not None:
             self.maze = maze
             walls = np.where(np.logical_not(maze))
-            self.walls = [np.array(i, j) for i, j in zip(walls)]
+            self.walls = np.array(walls).T.tolist()
         else:
             flat_maze = np.full(size[0] * size[1], True)
             wall_index = np.array(wall_index) - 1
@@ -114,8 +114,9 @@ class Maze:
                 reward -= 0.1
             if is_goaled:
                 reward += 1.0
-        else:
-            pass
+        elif self.reward_mode == "sparse":
+            if is_goaled:
+                reward += 1.0
         return reward
 
     def __str__(self):

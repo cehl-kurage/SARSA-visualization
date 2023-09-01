@@ -49,8 +49,8 @@ class Agent:
         action = np.argmax(pos)
         return action
 
-    def act(self, state, episode):
-        epsilon = 0.7 * (1 / (episode + 1))
+    def act(self, state, episode, eps_greedy_off=False, epsilon=0.7):
+        epsilon = epsilon if eps_greedy_off else epsilon * (1 / (episode + 1))
         if epsilon < np.random.uniform(0, 1):
             action = self.act_greedy(state)
         else:
@@ -58,7 +58,13 @@ class Agent:
         return action
 
 
-def train(agent: Agent, env: Maze, num_episodes: int = 200, num_steps: int = 30):
+def train(
+    agent: Agent,
+    env: Maze,
+    reward_scale: float = 1.0,
+    num_episodes: int = 200,
+    num_steps: int = 30,
+):
     for episode in range(num_episodes):
         state = tuple(env.current_position)
         action = agent.act(state, episode)
@@ -67,6 +73,7 @@ def train(agent: Agent, env: Maze, num_episodes: int = 200, num_steps: int = 30)
         for t in range(num_steps):
             action = agent.act(state, episode)
             reward, goaled = env.step(INDEX2DIRECTIONS[action])
+            reward *= reward_scale  # 報酬のスケールを変えられる
             next_state = tuple(env.current_position)
 
             episode_reward += reward
